@@ -50,19 +50,29 @@ public class ApiClient
             using var fileStream = new FileStream(caminhoAbsoluto, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
             
             // Gerar Hash rápido usando SHA256 (Pode ser otimizado para arquivos gigantes)
-            string hashOriginal = string.Empty;
+            // Gerar Hash rápido usando SHA256 (Pode ser otimizado para arquivos gigantes)
+            string hashOriginal = "hash-pendente";
             // Para simplificação de desempenho, deixaremos o Hash vazio no cliente agora e implementaremos se exigido
             
             using var content = new MultipartFormDataContent();
             var streamContent = new ProgressableStreamContent(fileStream, 4096, progressoAtualizado);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
             content.Add(streamContent, "file", fileInfo.Name);
             content.Add(new StringContent(hashOriginal), "hashOriginal");
 
             var response = await _httpClient.PostAsync("api/Arquivos/upload", content, token);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Erro HTTP: {response.StatusCode} - {errorBody}");
+            }
             return response.IsSuccessStatusCode;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"Erro no upload: {ex.Message}");
+            if (ex.InnerException != null)
+                Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
             return false;
         }
     }
