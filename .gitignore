@@ -1,1 +1,7 @@
 /config
+/src/ProjectUploader.API/obj
+/src/ProjectUploader.Aplicacao/obj
+/src/ProjectUploader.Dominio/obj
+/src/ProjectUploader.DownloadApp/obj
+/src/ProjectUploader.Infraestrutura/obj
+/src/ProjectUploader.UploadApp/obj

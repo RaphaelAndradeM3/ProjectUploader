@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ProjectUploader.API/ProjectUploader.API.csproj" />
+    <Project Path="src/ProjectUploader.Aplicacao/ProjectUploader.Aplicacao.csproj" />
+    <Project Path="src/ProjectUploader.Dominio/ProjectUploader.Dominio.csproj" />
+    <Project Path="src/ProjectUploader.DownloadApp/ProjectUploader.DownloadApp.csproj" />
+    <Project Path="src/ProjectUploader.Infraestrutura/ProjectUploader.Infraestrutura.csproj" />
+    <Project Path="src/ProjectUploader.UploadApp/ProjectUploader.UploadApp.csproj" />
+  </Folder>
+</Solution>
