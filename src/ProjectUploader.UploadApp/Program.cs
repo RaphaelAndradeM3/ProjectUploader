@@ -1,16 +1,31 @@
+using System;
+using System.Windows.Forms;
+using Microsoft.Extensions.DependencyInjection;
+using ProjectUploader.UploadApp.Formularios;
+using ProjectUploader.UploadApp.Servicos;
+
 namespace ProjectUploader.UploadApp;
 
-static class Program
+internal static class Program
 {
-    /// <summary>
-    ///  The main entry point for the application.
-    /// </summary>
     [STAThread]
     static void Main()
     {
-        // To customize application configuration such as set high DPI settings or default font,
-        // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
-        Application.Run(new Form1());
-    }    
+
+        var services = new ServiceCollection();
+        
+        // Registrar HttpClient para o ApiClient
+        services.AddHttpClient<ApiClient>();
+        
+        // Registrar Formulários
+        services.AddTransient<FrmLogin>();
+        services.AddTransient<FrmPrincipalUpload>();
+
+        using var serviceProvider = services.BuildServiceProvider();
+
+        // Inicia pelo Form de Login
+        var frmLogin = serviceProvider.GetRequiredService<FrmLogin>();
+        Application.Run(frmLogin);
+    }
 }
