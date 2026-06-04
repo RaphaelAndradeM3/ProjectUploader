@@ -18,7 +18,7 @@ public class ApiClient
     public ApiClient(HttpClient httpClient)
     {
         _httpClient = httpClient;
-        _httpClient.BaseAddress = new Uri("https://localhost:7157/"); // Configurar via appsettings futuro
+        _httpClient.BaseAddress = new Uri("http://localhost:5206/"); // Configurar via appsettings futuro
     }
 
     public void DefinirToken(string token)

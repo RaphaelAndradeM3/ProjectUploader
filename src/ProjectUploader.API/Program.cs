@@ -22,6 +22,8 @@ builder.Host.UseSerilog();
 
 // Adicionar Controllers
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Fallback: Testar conexão com SQL Server (master) para ver se o serviço existe
 bool useSqlite = false;
@@ -113,7 +115,8 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
-    // Swagger removido (consumo estrito pelo WinForms)
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
