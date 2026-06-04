@@ -23,9 +23,30 @@ builder.Host.UseSerilog();
 // Adicionar Controllers
 builder.Services.AddControllers();
 
-// Configuração do Banco de Dados (SQL Server) - Scoped
+// Fallback: Testar conexão com SQL Server (master) para ver se o serviço existe
+bool useSqlite = false;
+var connectionString = builder.Configuration.GetConnectionString("ConexaoPadrao") ?? "Server=(localdb)\\MSSQLLocalDB;Database=ProjectUploaderDB;Trusted_Connection=True;";
+
+try
+{
+    var builderStr = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString) { InitialCatalog = "master" };
+    using var conn = new Microsoft.Data.SqlClient.SqlConnection(builderStr.ConnectionString);
+    conn.Open();
+}
+catch
+{
+    useSqlite = true;
+    Log.Warning("SQL Server não encontrado ou inacessível. Usando fallback para SQLite (ProjectUploader.db).");
+}
+
+// Configuração do Banco de Dados - Scoped
 builder.Services.AddDbContext<ContextoBancoDados>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ConexaoPadrao") ?? "Server=(localdb)\\MSSQLLocalDB;Database=ProjectUploaderDB;Trusted_Connection=True;"));
+{
+    if (useSqlite)
+        options.UseSqlite("Data Source=ProjectUploader.db");
+    else
+        options.UseSqlServer(connectionString);
+});
 
 // Injeção de Dependência: Repositórios - Scoped
 builder.Services.AddScoped<IRepositorioUsuario, RepositorioUsuario>();
