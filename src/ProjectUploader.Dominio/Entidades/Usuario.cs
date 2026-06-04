@@ -42,9 +42,9 @@ public class Usuario
 
     public void AtualizarDadosBasicos(string nomeCompleto, string nomeUsuario, string email)
     {
-        ArgumentNullException.ThrowIfNull(nomeCompleto);
-        ArgumentNullException.ThrowIfNull(nomeUsuario);
-        ArgumentNullException.ThrowIfNull(email);
+        if (string.IsNullOrWhiteSpace(nomeCompleto)) throw new ArgumentException("Nome completo não pode ser vazio.");
+        if (string.IsNullOrWhiteSpace(nomeUsuario)) throw new ArgumentException("Nome de usuário não pode ser vazio.");
+        if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email não pode ser vazio.");
 
         if (nomeUsuario.Contains(' '))
             throw new ArgumentException("O nome de usuário não pode conter espaços.");

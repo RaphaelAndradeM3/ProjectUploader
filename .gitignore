@@ -5,3 +5,11 @@
 /src/ProjectUploader.DownloadApp/obj
 /src/ProjectUploader.Infraestrutura/obj
 /src/ProjectUploader.UploadApp/obj
+/src/ProjectUploader.API/bin
+/src/ProjectUploader.Aplicacao/bin
+/src/ProjectUploader.Dominio/bin
+/src/ProjectUploader.DownloadApp/bin
+/src/ProjectUploader.Infraestrutura/bin
+/src/ProjectUploader.Testes/bin
+/src/ProjectUploader.UploadApp/bin
+/src/ProjectUploader.Testes/obj

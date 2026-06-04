@@ -22,8 +22,6 @@ builder.Host.UseSerilog();
 
 // Adicionar Controllers
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 // Configuração do Banco de Dados (SQL Server) - Scoped
 builder.Services.AddDbContext<ContextoBancoDados>(options =>
@@ -94,8 +92,7 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Swagger removido (consumo estrito pelo WinForms)
 }
 
 app.UseHttpsRedirection();
