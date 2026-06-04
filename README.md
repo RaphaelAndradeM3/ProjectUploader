@@ -26,4 +26,3 @@ O sistema é dividido nas seguintes frentes:
 ## Documentação e Regras
 
 * Os documentos de requisitos encontram-se na pasta `docs/`.
-* As regras de arquitetura (Clean Architecture, DDD, SOLID) encontram-se em `config/GEMINI_Padrao_CSharp.md`. **Importante**: O código deverá ser todo escrito em pt-BR.
