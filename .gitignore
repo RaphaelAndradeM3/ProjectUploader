@@ -14,3 +14,6 @@
 /src/ProjectUploader.UploadApp/bin
 /src/ProjectUploader.Testes/obj
 /src/ProjectUploader.API/Uploads
+/src/ProjectUploader.API/Logs
+/src/ProjectUploader.DownloadApp/Logs
+/src/ProjectUploader.UploadApp/Logs

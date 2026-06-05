@@ -32,10 +32,10 @@ const Dashboard = () => {
 
   const arquivosColumns = [
     { title: 'Nome do Arquivo', dataIndex: 'nomeOriginal' },
-    { title: 'Tamanho (MB)', render: (row) => `${(row.totalBytes / 1024 / 1024).toFixed(2)} MB` },
+    { title: 'Tamanho (MB)', render: (row) => `${(row.tamanhoBytes / 1024 / 1024).toFixed(2)} MB` },
     { title: 'Status', render: (row) => (
-      <span style={{ color: row.status === 1 ? 'var(--success)' : 'var(--warning)' }}>
-        {row.status === 1 ? 'Concluído' : 'Processando'}
+      <span style={{ color: row.status === 3 ? 'var(--success)' : 'var(--warning)' }}>
+        {row.status === 3 ? 'Concluído' : 'Processando'}
       </span>
     )}
   ];
@@ -52,7 +52,7 @@ const Dashboard = () => {
         <Card>
           <h3 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Armazenamento Utilizado</h3>
           <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>
-            {(arquivos.reduce((acc, curr) => acc + curr.totalBytes, 0) / 1024 / 1024).toFixed(2)} MB
+            {(arquivos.reduce((acc, curr) => acc + (curr.tamanhoBytes || 0), 0) / 1024 / 1024).toFixed(2)} MB
           </p>
         </Card>
       </div>
