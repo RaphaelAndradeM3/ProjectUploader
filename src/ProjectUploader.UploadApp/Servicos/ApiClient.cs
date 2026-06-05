@@ -19,6 +19,7 @@ public class ApiClient
     {
         _httpClient = httpClient;
         _httpClient.BaseAddress = new Uri("http://localhost:5206/"); // Configurar via appsettings futuro
+        _httpClient.Timeout = Timeout.InfiniteTimeSpan; // Permitir uploads longos de arquivos grandes
     }
 
     public void DefinirToken(string token)
@@ -75,9 +76,7 @@ public class ApiClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro no upload: {ex.Message}");
-            if (ex.InnerException != null)
-                Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+            Serilog.Log.Error(ex, "Erro ao enviar arquivo {Arquivo}", caminhoAbsoluto);
             return false;
         }
     }

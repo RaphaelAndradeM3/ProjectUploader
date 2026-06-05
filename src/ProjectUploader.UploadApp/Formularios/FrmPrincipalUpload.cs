@@ -24,6 +24,7 @@ public partial class FrmPrincipalUpload : Form
     private CancellationTokenSource _cts = new();
 
     private Button btnVerArquivosEnviados;
+    private Button btnReenviarFalhas;
     private string configPath = "config_pasta.txt";
 
     public FrmPrincipalUpload(ApiClient apiClient)
@@ -35,7 +36,7 @@ public partial class FrmPrincipalUpload : Form
     private void InitializeComponent()
     {
         this.Text = "Project Uploader - Cliente de Envio (Multi-Thread)";
-        this.Size = new Size(800, 600);
+        this.Size = new Size(950, 600);
         this.StartPosition = FormStartPosition.CenterScreen;
 
         btnSelecionarPasta = new Button { Text = "Selecionar Pasta", Location = new Point(20, 20), Width = 150 };
@@ -47,14 +48,17 @@ public partial class FrmPrincipalUpload : Form
         btnVerArquivosEnviados = new Button { Text = "Ver Arquivos Enviados", Location = new Point(360, 20), Width = 180 };
         btnVerArquivosEnviados.Click += BtnVerArquivosEnviados_Click;
 
-        lblStatusGlobal = new Label { Location = new Point(560, 25), Width = 200, Text = "Nenhum arquivo selecionado." };
+        btnReenviarFalhas = new Button { Text = "Reenviar Falhas", Location = new Point(550, 20), Width = 130, Enabled = false };
+        btnReenviarFalhas.Click += BtnReenviarFalhas_Click;
 
-        pbGlobal = new ProgressBar { Location = new Point(20, 60), Width = 740, Height = 20 };
+        lblStatusGlobal = new Label { Location = new Point(690, 25), Width = 200, Text = "Nenhum arquivo selecionado." };
+
+        pbGlobal = new ProgressBar { Location = new Point(20, 60), Width = 890, Height = 20 };
 
         dgvArquivos = new DataGridView
         {
             Location = new Point(20, 100),
-            Width = 740,
+            Width = 890,
             Height = 440,
             ReadOnly = true,
             AllowUserToAddRows = false,
@@ -71,6 +75,7 @@ public partial class FrmPrincipalUpload : Form
         this.Controls.Add(btnSelecionarPasta);
         this.Controls.Add(btnIniciarUpload);
         this.Controls.Add(btnVerArquivosEnviados);
+        this.Controls.Add(btnReenviarFalhas);
         this.Controls.Add(lblStatusGlobal);
         this.Controls.Add(pbGlobal);
         this.Controls.Add(dgvArquivos);
@@ -106,6 +111,7 @@ public partial class FrmPrincipalUpload : Form
 
             lblStatusGlobal.Text = $"{_arquivosPendentes.Count} arquivos selecionados.";
             btnIniciarUpload.Enabled = _arquivosPendentes.Any();
+            btnReenviarFalhas.Enabled = false;
         }
     }
 
@@ -214,6 +220,100 @@ public partial class FrmPrincipalUpload : Form
         await Task.WhenAll(tasks);
         MessageBox.Show("Transferência Concluída!", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
         btnSelecionarPasta.Enabled = true;
+        btnIniciarUpload.Enabled = true;
+
+        foreach(DataGridViewRow row in dgvArquivos.Rows)
+        {
+            if (row.Cells["Status"].Value?.ToString() == "Erro")
+            {
+                btnReenviarFalhas.Enabled = true;
+                break;
+            }
+        }
+    }
+
+    private async void BtnReenviarFalhas_Click(object? sender, EventArgs e)
+    {
+        btnSelecionarPasta.Enabled = false;
+        btnIniciarUpload.Enabled = false;
+        btnReenviarFalhas.Enabled = false;
+        _cts = new CancellationTokenSource();
+
+        var indicesFalhos = new List<int>();
+        for (int i = 0; i < dgvArquivos.Rows.Count; i++)
+        {
+            if (dgvArquivos.Rows[i].Cells["Status"].Value?.ToString() == "Erro")
+            {
+                indicesFalhos.Add(i);
+            }
+        }
+
+        if (!indicesFalhos.Any())
+        {
+            MessageBox.Show("Nenhum arquivo com erro para reenviar.", "Informação", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            btnSelecionarPasta.Enabled = true;
+            btnIniciarUpload.Enabled = true;
+            return;
+        }
+
+        using var semaphore = new SemaphoreSlim(Environment.ProcessorCount * 2);
+        var tasks = new List<Task>();
+        int concluidos = 0;
+
+        pbGlobal.Maximum = indicesFalhos.Count;
+        pbGlobal.Value = 0;
+        lblStatusGlobal.Text = $"Reenviando {indicesFalhos.Count} arquivos falhos...";
+
+        foreach (var rowIndex in indicesFalhos)
+        {
+            var caminhoArquivo = _arquivosPendentes[rowIndex];
+            
+            tasks.Add(Task.Run(async () =>
+            {
+                await semaphore.WaitAsync(_cts.Token);
+                try
+                {
+                    AtualizarGrid(rowIndex, "Em Andamento", "0%");
+                    var fileInfo = new FileInfo(caminhoArquivo);
+                    
+                    bool sucesso = await _apiClient.FazerUploadArquivoAsync(caminhoArquivo, (bytesEnviados) => 
+                    {
+                        var pct = (bytesEnviados * 100) / fileInfo.Length;
+                        AtualizarGrid(rowIndex, "Em Andamento", $"{pct}%");
+                    }, _cts.Token);
+
+                    AtualizarGrid(rowIndex, sucesso ? "Concluído" : "Erro", sucesso ? "100%" : "Falhou");
+                }
+                catch (Exception)
+                {
+                    AtualizarGrid(rowIndex, "Erro", "Falhou");
+                }
+                finally
+                {
+                    Interlocked.Increment(ref concluidos);
+                    Invoke((Action)(() =>
+                    {
+                        pbGlobal.Value = concluidos;
+                        lblStatusGlobal.Text = $"Reenviados {concluidos} de {indicesFalhos.Count} arquivos.";
+                    }));
+                    semaphore.Release();
+                }
+            }, _cts.Token));
+        }
+
+        await Task.WhenAll(tasks);
+        MessageBox.Show("Reenvio Concluído!", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        btnSelecionarPasta.Enabled = true;
+        btnIniciarUpload.Enabled = true;
+        
+        foreach(DataGridViewRow row in dgvArquivos.Rows)
+        {
+            if (row.Cells["Status"].Value?.ToString() == "Erro")
+            {
+                btnReenviarFalhas.Enabled = true;
+                break;
+            }
+        }
     }
 
     private void AtualizarGrid(int rowIndex, string status, string progresso)
