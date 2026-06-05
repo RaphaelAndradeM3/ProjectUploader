@@ -18,4 +18,9 @@ public class RepositorioLogEvento : IRepositorioLogEvento
         await _contexto.LogsEventos.AddAsync(logEvento);
         await _contexto.SaveChangesAsync();
     }
+
+    public async Task<System.Collections.Generic.IEnumerable<LogEvento>> ObterTodosAsync()
+    {
+        return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(_contexto.LogsEventos);
+    }
 }

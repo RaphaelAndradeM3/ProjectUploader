@@ -38,6 +38,14 @@ public class MapeamentoUsuario : IEntityTypeConfiguration<Usuario>
         builder.Property(u => u.EmailExtra).HasMaxLength(150);
         builder.Property(u => u.DicaRecuperacao).HasMaxLength(100);
 
+        builder.Property(u => u.CodigoInterno)
+            .ValueGeneratedOnAdd(); // Auto numerável
+
+        builder.Property(u => u.TokenRecuperacao)
+            .HasMaxLength(255);
+            
+        builder.Property(u => u.DataExpiracaoToken);
+
         builder.Property(u => u.RowVersion)
             .IsRowVersion();
     }

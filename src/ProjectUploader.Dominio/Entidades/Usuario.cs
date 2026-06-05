@@ -20,8 +20,13 @@ public class Usuario
     public string DicaRecuperacao { get; private set; } = string.Empty;
     public TipoPerfil Perfil { get; private set; }
     
+    public int CodigoInterno { get; private set; } // Auto numerável
+    
     // Controle de concorrência otimista (EF Core)
     public byte[] RowVersion { get; private set; } = Array.Empty<byte>();
+
+    public string TokenRecuperacao { get; private set; } = string.Empty;
+    public DateTime? DataExpiracaoToken { get; private set; }
 
     // Construtor vazio para ORM
     protected Usuario() { }
@@ -67,5 +72,25 @@ public class Usuario
         ArgumentNullException.ThrowIfNull(novaSenhaHash);
         SenhaHash = novaSenhaHash;
         DicaRecuperacao = dicaRecuperacao ?? string.Empty;
+    }
+
+    public void GerarTokenRecuperacao(string token, TimeSpan validade)
+    {
+        TokenRecuperacao = token;
+        DataExpiracaoToken = DateTime.UtcNow.Add(validade);
+    }
+
+    public bool ValidarEUsarTokenRecuperacao(string token)
+    {
+        if (string.IsNullOrEmpty(TokenRecuperacao) || TokenRecuperacao != token)
+            return false;
+
+        if (DataExpiracaoToken < DateTime.UtcNow)
+            return false;
+
+        // Limpa o token após uso bem-sucedido
+        TokenRecuperacao = string.Empty;
+        DataExpiracaoToken = null;
+        return true;
     }
 }

@@ -9,4 +9,5 @@ namespace ProjectUploader.Dominio.Repositorios;
 public interface IRepositorioLogEvento
 {
     Task AdicionarAsync(LogEvento logEvento);
+    Task<System.Collections.Generic.IEnumerable<LogEvento>> ObterTodosAsync();
 }
