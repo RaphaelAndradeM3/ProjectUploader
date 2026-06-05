@@ -86,6 +86,29 @@ public class ApiClient
     {
         public string Token { get; set; } = string.Empty;
     }
+
+    public class ArquivoResponse
+    {
+        public Guid Id { get; set; }
+        public string NomeOriginal { get; set; } = string.Empty;
+        public long TotalBytes { get; set; }
+        public int Status { get; set; }
+    }
+
+    public async Task<System.Collections.Generic.List<ArquivoResponse>> ListarArquivosAsync()
+    {
+        if (!string.IsNullOrEmpty(_token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        }
+
+        var response = await _httpClient.GetAsync("api/Arquivos");
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<System.Collections.Generic.List<ArquivoResponse>>() ?? new System.Collections.Generic.List<ArquivoResponse>();
+        }
+        return new System.Collections.Generic.List<ArquivoResponse>();
+    }
 }
 
 // Classe utilitária para capturar o progresso do Stream de envio HTTP

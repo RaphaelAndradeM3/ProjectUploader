@@ -23,6 +23,9 @@ public partial class FrmPrincipalUpload : Form
     private List<string> _arquivosPendentes = new();
     private CancellationTokenSource _cts = new();
 
+    private Button btnVerArquivosEnviados;
+    private string configPath = "config_pasta.txt";
+
     public FrmPrincipalUpload(ApiClient apiClient)
     {
         _apiClient = apiClient;
@@ -41,7 +44,10 @@ public partial class FrmPrincipalUpload : Form
         btnIniciarUpload = new Button { Text = "Iniciar Upload", Location = new Point(190, 20), Width = 150, Enabled = false };
         btnIniciarUpload.Click += BtnIniciarUpload_Click;
 
-        lblStatusGlobal = new Label { Location = new Point(360, 25), Width = 400, Text = "Nenhum arquivo selecionado." };
+        btnVerArquivosEnviados = new Button { Text = "Ver Arquivos Enviados", Location = new Point(360, 20), Width = 180 };
+        btnVerArquivosEnviados.Click += BtnVerArquivosEnviados_Click;
+
+        lblStatusGlobal = new Label { Location = new Point(560, 25), Width = 200, Text = "Nenhum arquivo selecionado." };
 
         pbGlobal = new ProgressBar { Location = new Point(20, 60), Width = 740, Height = 20 };
 
@@ -64,6 +70,7 @@ public partial class FrmPrincipalUpload : Form
 
         this.Controls.Add(btnSelecionarPasta);
         this.Controls.Add(btnIniciarUpload);
+        this.Controls.Add(btnVerArquivosEnviados);
         this.Controls.Add(lblStatusGlobal);
         this.Controls.Add(pbGlobal);
         this.Controls.Add(dgvArquivos);
@@ -72,8 +79,16 @@ public partial class FrmPrincipalUpload : Form
     private void BtnSelecionarPasta_Click(object? sender, EventArgs e)
     {
         using var fbd = new FolderBrowserDialog();
+        
+        if (File.Exists(configPath))
+        {
+            try { fbd.SelectedPath = File.ReadAllText(configPath); } catch { }
+        }
+
         if (fbd.ShowDialog() == DialogResult.OK)
         {
+            try { File.WriteAllText(configPath, fbd.SelectedPath); } catch { }
+
             _arquivosPendentes = Directory.GetFiles(fbd.SelectedPath, "*.*", SearchOption.AllDirectories).ToList();
 
             if (_arquivosPendentes.Count > 999)
@@ -91,6 +106,57 @@ public partial class FrmPrincipalUpload : Form
 
             lblStatusGlobal.Text = $"{_arquivosPendentes.Count} arquivos selecionados.";
             btnIniciarUpload.Enabled = _arquivosPendentes.Any();
+        }
+    }
+
+    private async void BtnVerArquivosEnviados_Click(object? sender, EventArgs e)
+    {
+        btnVerArquivosEnviados.Enabled = false;
+        try
+        {
+            var arquivos = await _apiClient.ListarArquivosAsync();
+            if (!arquivos.Any())
+            {
+                MessageBox.Show("Nenhum arquivo enviado até o momento.", "Informação", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var formArquivos = new Form
+            {
+                Text = "Arquivos Enviados",
+                Size = new Size(600, 400),
+                StartPosition = FormStartPosition.CenterParent
+            };
+            
+            var dgvEnviados = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                RowHeadersVisible = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            };
+            
+            dgvEnviados.Columns.Add("Nome", "Nome Original");
+            dgvEnviados.Columns.Add("Tamanho", "Tamanho (MB)");
+            dgvEnviados.Columns.Add("Status", "Status");
+
+            foreach (var arq in arquivos)
+            {
+                dgvEnviados.Rows.Add(arq.NomeOriginal, $"{arq.TotalBytes / 1024.0 / 1024.0:F2} MB", arq.Status.ToString());
+            }
+
+            formArquivos.Controls.Add(dgvEnviados);
+            formArquivos.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro ao listar arquivos: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        finally
+        {
+            btnVerArquivosEnviados.Enabled = true;
         }
     }
 

@@ -12,12 +12,17 @@ namespace ProjectUploader.DownloadApp.Servicos;
 public class ApiClientDownloader
 {
     private readonly HttpClient _httpClient;
-    private string _token = string.Empty;
+    private static string _token = string.Empty;
 
     public ApiClientDownloader(HttpClient httpClient)
     {
         _httpClient = httpClient;
         _httpClient.BaseAddress = new Uri("http://localhost:5206/"); // Idealmente buscaria de um configs
+        
+        if (!string.IsNullOrEmpty(_token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        }
     }
 
     public void DefinirToken(string token)
