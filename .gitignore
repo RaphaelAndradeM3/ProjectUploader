@@ -17,3 +17,4 @@
 /src/ProjectUploader.API/Logs
 /src/ProjectUploader.DownloadApp/Logs
 /src/ProjectUploader.UploadApp/Logs
+/.vs
