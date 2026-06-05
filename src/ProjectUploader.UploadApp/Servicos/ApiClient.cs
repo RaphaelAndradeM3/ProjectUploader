@@ -13,7 +13,7 @@ namespace ProjectUploader.UploadApp.Servicos;
 public class ApiClient
 {
     private readonly HttpClient _httpClient;
-    private string _token = string.Empty;
+    private static string _token = string.Empty;
 
     public ApiClient(HttpClient httpClient)
     {
@@ -59,6 +59,11 @@ public class ApiClient
             streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
             content.Add(streamContent, "file", fileInfo.Name);
             content.Add(new StringContent(hashOriginal), "hashOriginal");
+
+            if (!string.IsNullOrEmpty(_token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            }
 
             var response = await _httpClient.PostAsync("api/Arquivos/upload", content, token);
             if (!response.IsSuccessStatusCode)
